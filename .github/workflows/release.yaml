@@ -19,16 +19,16 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Detect Version
-        uses: Lephuocthanh2000/.github/actions/detect_version@main
+        uses: gitops-ziichat/.github/actions/detect_version@main
         id: version
 
       - name: Determine Tag
         if: steps.version.outputs.current == ''
-        uses: Lephuocthanh2000/.github/actions/determine_tag@main
+        uses: gitops-ziichat/.github/actions/determine_tag@main
         id: tag
 
       - name: GitHub Release
-        uses: Lephuocthanh2000/.github/actions/release@main
+        uses: gitops-ziichat/.github/actions/release@main
         with:
           sha: ${{ github.sha }}
           version: ${{ steps.version.outputs.current || steps.tag.outputs.next }}

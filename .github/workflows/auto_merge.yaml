@@ -26,7 +26,7 @@ jobs:
           github-token: ${{ secrets.GHCR_SECRET }}
 
       - name: Enable auto-merge for Dependabot PRs
-        uses: Lephuocthanh2000/.github/actions/auto_merge@main
+        uses: gitops-ziichat/.github/actions/auto_merge@main
         with:
           increment: ${{ steps.metadata.outputs.update-type }}
           allowed-increment: minor

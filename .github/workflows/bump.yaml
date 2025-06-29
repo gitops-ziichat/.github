@@ -20,10 +20,10 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Determine Tag
-        uses: Lephuocthanh2000/.github/actions/determine_tag@main
+        uses: gitops-ziichat/.github/actions/determine_tag@main
         id: tag
 
       - name: Update Version
-        uses: Lephuocthanh2000/.github/actions/update_version@main
+        uses: gitops-ziichat/.github/actions/update_version@main
         with:
           version: ${{ steps.tag.outputs.next }}

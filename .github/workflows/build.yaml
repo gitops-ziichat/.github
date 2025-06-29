@@ -41,7 +41,7 @@ jobs:
           submodules: 'true'
 
       - name: Build Docker Image
-        uses: Lephuocthanh2000/.github/actions/build@main
+        uses: gitops-ziichat/.github/actions/build@main
         with:
           registry: ${{ inputs.registry }}
           image_name: ${{ inputs.image_name }}

@@ -4,31 +4,31 @@ This organization provides reference implementations for applications that are C
 
 ## Repositories Structure
 
-- [[app]](https://github.com/Lephuocthanh2000/acme-node) Repository
+- [[app]](https://github.com/gitops-ziichat/acme-node) Repository
 
-  Contains the source code for the application, including any workflows. Tags and releases are created here for production deployments. PRs labeled appropriately trigger preview deployments via Argo CD. See [argo-config](https://github.com/Lephuocthanh2000/argo-config/blob/main/app-of-apps/apps/) for more information.
-
-  Use this template [TODO]().
-
-- [[app]-deployment](https://github.com/Lephuocthanh2000/acme-node-deployment) Repository
-
-  Holds deployment manifests and configuration files for the application. These repositories are auto discovered by Argo CD for continuous deployment to their applicable environments. See [argo-config](https://github.com/Lephuocthanh2000/argo-config/blob/main/app-of-apps/apps/) for more information.
+  Contains the source code for the application, including any workflows. Tags and releases are created here for production deployments. PRs labeled appropriately trigger preview deployments via Argo CD. See [argo-config](https://github.com/gitops-ziichat/argo-config/blob/main/app-of-apps/apps/) for more information.
 
   Use this template [TODO]().
 
-- [[app]-infra](https://github.com/Lephuocthanh2000/acme-node-infra) Repository
+- [[app]-deployment](https://github.com/gitops-ziichat/acme-node-deployment) Repository
+
+  Holds deployment manifests and configuration files for the application. These repositories are auto discovered by Argo CD for continuous deployment to their applicable environments. See [argo-config](https://github.com/gitops-ziichat/argo-config/blob/main/app-of-apps/apps/) for more information.
+
+  Use this template [TODO]().
+
+- [[app]-infra](https://github.com/gitops-ziichat/acme-node-infra) Repository
 
   Manages infrastructure resources specific to the application, such as storage or queues, keeping infrastructure configuration separate from application code.
 
   Use this template [TODO]().
 
-- [[tool]-addon](https://github.com/Lephuocthanh2000/gateway-api-addon) Repository
+- [[tool]-addon](https://github.com/gitops-ziichat/gateway-api-addon) Repository
 
-  Manages Kubernetes addons and configurations that enhance a cluster's functionality. These repositories are auto discovered by Argo CD for continuous deployment to all clusters. See [argo-config](https://github.com/Lephuocthanh2000/argo-config/blob/main/app-of-apps/addons/) for more information.
+  Manages Kubernetes addons and configurations that enhance a cluster's functionality. These repositories are auto discovered by Argo CD for continuous deployment to all clusters. See [argo-config](https://github.com/gitops-ziichat/argo-config/blob/main/app-of-apps/addons/) for more information.
 
   Use this template [TODO]().
 
-- [.github](https://github.com/Lephuocthanh2000/.github) Repository
+- [.github](https://github.com/gitops-ziichat/.github) Repository
 
   This is a special repository within GitHub that provides functionality across the organization.
 
@@ -37,7 +37,7 @@ This organization provides reference implementations for applications that are C
   - [GitHub Action Workflow Templates](https://docs.github.com/en/actions/sharing-automations/creating-workflow-templates-for-your-organization)
   - [Reusing GitHub Action Workflows](https://docs.github.com/en/actions/sharing-automations/reusing-workflows)
 
-- [.github-private](https://github.com/Lephuocthanh2000/.github-private) Repository
+- [.github-private](https://github.com/gitops-ziichat/.github-private) Repository
 
   This is another special repository within GitHub that [extends profile customization](https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/customizing-your-organizations-profile#adding-a-member-only-organization-profile-readme).
 
@@ -50,7 +50,7 @@ This organization provides reference implementations for applications that are C
 
 1. Automatic Preview Deployments
 
-    - The [Argo CD PR Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/) detects PRs labeled with <https://github.com/Lephuocthanh2000/.github/labels/preview> and generates a transient environment for the branch.
+    - The [Argo CD PR Generator](https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/) detects PRs labeled with <https://github.com/gitops-ziichat/.github/labels/preview> and generates a transient environment for the branch.
     - The PR-specific environment allows for isolated testing and review on dedicated subdomains.
     - Upon successful deployment, [Argo's Notification tooling](https://argo-cd.readthedocs.io/en/stable/operator-manual/notifications/) sends [deployment status updates to GitHub](https://docs.github.com/en/rest/deployments/deployments), notifying the PR's deployment with statuses `in_progress`, `success`, `failure`, or `error` for real-time feedback on the preview environment.
     - The preview deployment is torn down upon removing the aforementioned label or closing the PR.
@@ -141,7 +141,7 @@ flowchart TD
     end
 ```
 
-Concretely, that looks like this within the [integration.yaml GitHub Action](https://github.com/Lephuocthanh2000/.github/blob/main/workflow-templates/integration.yaml).
+Concretely, that looks like this within the [integration.yaml GitHub Action](https://github.com/gitops-ziichat/.github/blob/main/workflow-templates/integration.yaml).
 
 ```mermaid
 flowchart LR
@@ -204,7 +204,7 @@ flowchart TD
     end
 ```
 
-Concretely, that looks like this within the [deployment.yaml GitHub Action](https://github.com/Lephuocthanh2000/.github/blob/main/workflow-templates/deployment.yaml).
+Concretely, that looks like this within the [deployment.yaml GitHub Action](https://github.com/gitops-ziichat/.github/blob/main/workflow-templates/deployment.yaml).
 
 ```mermaid
 flowchart LR

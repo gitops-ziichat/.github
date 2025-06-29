@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Sync Deployment
-        uses: Lephuocthanh2000/.github/actions/sync_deployment@main
+        uses: gitops-ziichat/.github/actions/sync_deployment@main
         with:
           ref: ${{ inputs.ref }}
           state: ${{ inputs.state }}
