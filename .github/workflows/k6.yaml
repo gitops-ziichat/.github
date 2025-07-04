@@ -1,0 +1,20 @@
+name: K6 Load Test
+
+jobs:
+  k6-test:
+    name: Run K6 Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install K6
+        run: |
+          curl -sL https://github.com/grafana/k6/releases/latest/download/k6-v0.49.0-linux-amd64.tar.gz | tar xz
+          sudo mv k6-v*/k6 /usr/local/bin/k6
+
+      - name: Run K6 test
+        run: |
+          echo "Running: k6 run ${{ inputs.args }} ${{ inputs.script }}"
+          k6 run ${{ inputs.args }} ${{ inputs.script }}

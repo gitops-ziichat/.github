@@ -28,12 +28,21 @@ jobs:
     uses: gitops-ziichat/.github/.github/workflows/deploy.yaml@main
     with:
       environment: ${{ matrix.target }}
-
+  
   build:
     needs: deploy
     name: Build
     uses: gitops-ziichat/.github/.github/workflows/build.yaml@main
 
+  k6:
+    name: Load Test with K6
+    needs: deploy
+    if: ${{ needs.deploy.result == 'success' }}
+    uses: gitops-ziichat/.github/.github/workflows/k6.yaml@main
+    with:
+      script: tests/load-test.js
+      args: --vus 10 --duration 30s
+      
   release:
     needs: build
     name: Release

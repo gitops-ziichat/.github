@@ -48,7 +48,14 @@ jobs:
     uses: gitops-ziichat/.github/.github/workflows/deploy.yaml@main
     with:
       environment: preview
-
+  k6:
+    name: Load Test with K6
+    needs: deploy
+    if: ${{ needs.deploy.result == 'success' }}
+    uses: gitops-ziichat/.github/.github/workflows/k6.yaml@main
+    with:
+      script: tests/load-test.js
+      args: --vus 10 --duration 30s
   build:
     needs: deploy
     name: Build
