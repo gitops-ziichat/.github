@@ -1,0 +1,29 @@
+# https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+name: Bump
+
+jobs:
+  bump:
+    name: Bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Determine Tag
+        uses: gitops-ziichat/.github/actions/determine_tag@main
+        id: tag
+
+      - name: Update Version
+        uses: gitops-ziichat/.github/actions/update_version@main
+        with:
+          version: ${{ steps.tag.outputs.next }}
