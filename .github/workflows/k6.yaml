@@ -23,16 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Install dependencies
-        run: |
-          npm install
+        uses: actions/checkout@v2
 
       - name: Setup K6
         uses: grafana/setup-k6-action@v1
-        with:
-          browser: ${{ inputs.browser }}
 
       - name: Run K6 tests
         uses: grafana/run-k6-action@v1
