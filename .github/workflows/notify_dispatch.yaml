@@ -26,7 +26,7 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Call notify_discord.yaml
-        uses: gitops-ziichat/.github/.github/workflows/notify_discord.yaml@main
+        uses: gitops-ziichat/.github/actions/notify_discord@main
         with:
           deployment_status: "${{ env.FAILED_JOBS }}"
           tests_passed: "❌"

@@ -1,0 +1,34 @@
+name: Notify Dispatch
+description: Collect failed jobs and notify Discord
+inputs:
+  discord_webhook:
+    description: Discord Webhook URL
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Detect Failed Jobs
+      id: failed
+      shell: bash
+      run: |
+        FAILED=""
+        for job in lint test build; do
+          result="${{ needs[job].result }}"
+          if [[ "$result" != "success" ]]; then
+            FAILED="${FAILED}\n- $job ❌ ($result)"
+          fi
+        done
+        echo "FAILED_JOBS<<EOF" >> $GITHUB_ENV
+        echo "$FAILED" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
+
+    - name: Notify Discord
+      shell: bash
+      run: |
+        curl -X POST "$DISCORD_WEBHOOK" \
+          -H "Content-Type: application/json" \
+          -d "{\"content\":\"❌ CI Failed:\n$FAILED_JOBS\"}"
+      env:
+        DISCORD_WEBHOOK: ${{ inputs.discord_webhook }}
+
