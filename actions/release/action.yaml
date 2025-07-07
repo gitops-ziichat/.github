@@ -31,7 +31,7 @@ runs:
         VERSION: ${{ inputs.version }}
       run: |
         echo "🐳 Tagging Docker image $IMAGE:$VERSION"
-        docker tag  "$IMAGE:$VERSION"
+        docker tag "$IMAGE:$SHA" "$IMAGE:$VERSION"
         docker push "$IMAGE:$VERSION"
 
     - name: Create GitHub Release
