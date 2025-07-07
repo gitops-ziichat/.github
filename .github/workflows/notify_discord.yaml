@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send Discord Notification
-        uses: ./.github/actions/notify-discord
+        uses: gitops-ziichat/.github/actions/notify_discord@main
         with:
           discord_webhook: ${{ secrets.discord_webhook }}
           deployment_status: ${{ inputs.deployment_status }}
