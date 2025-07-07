@@ -1,0 +1,43 @@
+name: Notify Dispatcher
+
+on:
+  workflow_call:
+    secrets:
+      discord_webhook:
+        required: true
+
+jobs:
+  dispatch:
+    name: Collect Failure Info and Notify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detect Failed Jobs
+        id: failed
+        run: |
+          FAILED=""
+          for job in lint test build; do
+            result="${{ needs[job].result }}"
+            if [[ "$result" != "success" ]]; then
+              FAILED="${FAILED}\n- $job ❌ ($result)"
+            fi
+          done
+          echo "FAILED_JOBS<<EOF" >> $GITHUB_ENV
+          echo "$FAILED" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Call notify_discord.yaml
+        uses: gitops-ziichat/.github/.github/workflows/notify_discord.yaml@main
+        with:
+          deployment_status: "${{ env.FAILED_JOBS }}"
+          tests_passed: "❌"
+        secrets:
+          discord_webhook: ${{ secrets.discord_webhook }}
+
+      - name: Auto-Close PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr close "${{ github.event.pull_request.number }}" \
+            -R "$GITHUB_REPOSITORY" \
+            --delete-branch \
+            --comment "❌ CI failed. PR auto-closed."
