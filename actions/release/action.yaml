@@ -28,6 +28,7 @@ runs:
       shell: bash
       env:
         IMAGE: ${{ inputs.image }}
+        SHA: ${{ inputs.sha }}
         VERSION: ${{ inputs.version }}
       run: |
         echo "🐳 Tagging Docker image $IMAGE:$VERSION"
