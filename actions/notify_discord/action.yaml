@@ -1,34 +1,87 @@
-name: Notify Dispatch
-description: Collect failed jobs and notify Discord
+name: Notify Discord
+description: Send Discord notification for PR events.
+
 inputs:
   discord_webhook:
-    description: Discord Webhook URL
+    description: Discord webhook URL
     required: true
+  deployment_status:
+    description: Deployment status to show in embed
+    required: false
+    default: ""
+  tests_passed:
+    description: Tests status to show in embed
+    required: false
+    default: ""
 
 runs:
   using: "composite"
   steps:
-    - name: Detect Failed Jobs
-      id: failed
+    - name: Set Metadata
+      id: meta
       shell: bash
       run: |
-        FAILED=""
-        for job in lint test build; do
-          result="${{ needs[job].result }}"
-          if [[ "$result" != "success" ]]; then
-            FAILED="${FAILED}\n- $job ❌ ($result)"
-          fi
-        done
-        echo "FAILED_JOBS<<EOF" >> $GITHUB_ENV
-        echo "$FAILED" >> $GITHUB_ENV
-        echo "EOF" >> $GITHUB_ENV
+        ACTION="${{ github.event.action || '' }}"
+        MERGED="${{ github.event.pull_request.merged || 'false' }}"
 
-    - name: Notify Discord
+        if [[ "$ACTION" == "opened" ]]; then
+          echo "color=3066993" >> $GITHUB_OUTPUT
+          echo "role=1195734967294914591" >> $GITHUB_OUTPUT
+          echo "status=🟢 Opened" >> $GITHUB_OUTPUT
+        elif [[ "$ACTION" == "closed" && "$MERGED" == "true" ]]; then
+          echo "color=10181046" >> $GITHUB_OUTPUT
+          echo "role=1195734967294914592" >> $GITHUB_OUTPUT
+          echo "status=🟣 Merged" >> $GITHUB_OUTPUT
+        else
+          echo "color=15158332" >> $GITHUB_OUTPUT
+          echo "role=1195734967294914590" >> $GITHUB_OUTPUT
+          echo "status=🔴 Closed or Failed" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build Embed JSON
+      id: embed
       shell: bash
+      run: |
+        AUTHOR="${{ github.event.pull_request.user.login || 'unknown' }}"
+        BRANCH="${{ github.event.pull_request.head.ref || 'unknown' }} → ${{ github.event.pull_request.base.ref || 'unknown' }}"
+        URL="${{ github.event.pull_request.html_url || github.server_url }}"
+        TITLE="📣 PR #${{ github.event.pull_request.number || 'N/A' }} – ${{ steps.meta.outputs.status }}"
+
+        jq -n \
+          --arg title "$TITLE" \
+          --arg author "$AUTHOR" \
+          --arg branch "$BRANCH" \
+          --arg url "$URL" \
+          --arg deploy "${{ inputs.deployment_status }}" \
+          --arg test "${{ inputs.tests_passed }}" \
+          --argjson color "${{ steps.meta.outputs.color }}" \
+          '{
+            "title": $title,
+            "color": $color,
+            "fields": [
+              { "name": "👤 Author", "value": $author, "inline": true },
+              { "name": "🔀 Branch", "value": $branch, "inline": true },
+              { "name": "🧪 Tests", "value": $test, "inline": true },
+              { "name": "🚀 Deployment", "value": $deploy },
+              { "name": "🔗 View PR", "value": $url }
+            ]
+          }' > embed.json
+
+    - name: Send Discord Notification
+      shell: bash
+      env:
+        DISCORD_WEBHOOK: ${{ inputs.discord_webhook }}
+        ROLE_ID: ${{ steps.meta.outputs.role }}
       run: |
         curl -X POST "$DISCORD_WEBHOOK" \
           -H "Content-Type: application/json" \
-          -d "{\"content\":\"❌ CI Failed:\n$FAILED_JOBS\"}"
-      env:
-        DISCORD_WEBHOOK: ${{ inputs.discord_webhook }}
-
+          -d "$(jq -n \
+            --arg content "<@&$ROLE_ID>" \
+            --argjson embed "$(cat embed.json)" \
+            '{
+              "content": $content,
+              "embeds": [$embed],
+              "username": "GitHub PR Bot",
+              "avatar_url": "https://octodex.github.com/images/mona-the-rivetertocat.png",
+              "allowed_mentions": { "parse": ["roles"] }
+            }')"

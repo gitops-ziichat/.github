@@ -20,55 +20,9 @@ jobs:
     name: Send Discord Notification
     runs-on: ubuntu-latest
     steps:
-      - name: Set Metadata
-        id: meta
-        run: |
-          ACTION="${{ github.event.action }}"
-          MERGED="${{ github.event.pull_request.merged || 'false' }}"
-          if [[ "$ACTION" == "opened" ]]; then
-            echo "color=3066993" >> $GITHUB_OUTPUT
-            echo "role=1195734967294914591" >> $GITHUB_OUTPUT
-            echo "status=🟢 Opened" >> $GITHUB_OUTPUT
-          elif [[ "$ACTION" == "closed" && "$MERGED" == "true" ]]; then
-            echo "color=10181046" >> $GITHUB_OUTPUT
-            echo "role=1195734967294914592" >> $GITHUB_OUTPUT
-            echo "status=🟣 Merged" >> $GITHUB_OUTPUT
-          else
-            echo "color=15158332" >> $GITHUB_OUTPUT
-            echo "role=1195734967294914590" >> $GITHUB_OUTPUT
-            echo "status=🔴 Closed or Failed" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Send Discord Webhook
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.discord_webhook }}
-        run: |
-          curl -X POST "$DISCORD_WEBHOOK" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n \
-              --arg content "<@&${{ steps.meta.outputs.role }}>" \
-              --argjson embed "$(jq -n \
-                --arg title "📣 PR #${{ github.event.pull_request.number }} – ${{ steps.meta.outputs.status }}" \
-                --arg author "${{ github.event.pull_request.user.login }}" \
-                --arg branch "${{ github.event.pull_request.head.ref }} → ${{ github.event.pull_request.base.ref }}" \
-                --arg url "${{ github.event.pull_request.html_url }}" \
-                --arg deploy "${{ inputs.deployment_status }}" \
-                --arg test "${{ inputs.tests_passed }}" \
-                --argjson color "${{ steps.meta.outputs.color }}" \
-                '{
-                  "title": $title,
-                  "color": $color,
-                  "fields": [
-                    { "name": "👤 Author", "value": $author, "inline": true },
-                    { "name": "🔀 Branch", "value": $branch, "inline": true },
-                    { "name": "🧪 Tests", "value": $test, "inline": true },
-                    { "name": "🚀 Deployment", "value": $deploy },
-                    { "name": "🔗 View PR", "value": $url }
-                  ]
-                }')" \
-              '{
-                "content": $content,
-                "embeds": [$embed],
-                "username": "GitHub PR Bot",
-                "avatar_url": "https://octodex.github.com/images/mona-the-rivetertocat.png"
-              }')"
+      - name: Send Discord Notification
+        uses: ./.github/actions/notify-discord
+        with:
+          discord_webhook: ${{ secrets.discord_webhook }}
+          deployment_status: ${{ inputs.deployment_status }}
+          tests_passed: ${{ inputs.tests_passed }}

@@ -11,27 +11,22 @@ jobs:
     name: Collect Failure Info and Notify
     runs-on: ubuntu-latest
     steps:
-      - name: Detect Failed Jobs
-        id: failed
+      - name: Parse Failed Jobs
+        id: parse
         run: |
-          FAILED=""
-          for job in lint test build; do
-            result="${{ needs[job].result }}"
-            if [[ "$result" != "success" ]]; then
-              FAILED="${FAILED}\n- $job ❌ ($result)"
-            fi
-          done
+          echo "❌ Collecting failed jobs..."
+          echo '${{ inputs.failed_jobs_json }}' > needs.json
+
           echo "FAILED_JOBS<<EOF" >> $GITHUB_ENV
-          echo "$FAILED" >> $GITHUB_ENV
+          cat needs.json | jq -r 'to_entries[] | select(.value.result != "success") | "- \(.key) ❌ (\(.value.result))"' >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
-      - name: Call notify_discord.yaml
-        uses: gitops-ziichat/.github/actions/notify_discord@main
+      - name: Send Discord Notification
+        uses: gitops-ziichat/.github/actions/notify-discord@main
         with:
-          deployment_status: "${{ env.FAILED_JOBS }}"
-          tests_passed: "❌"
-        secrets:
           discord_webhook: ${{ secrets.discord_webhook }}
+          deployment_status: "${{ steps.failed.outputs.FAILED_JOBS }}"
+          tests_passed: "❌"
 
       - name: Auto-Close PR
         env:
