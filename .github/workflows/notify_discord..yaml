@@ -1,0 +1,114 @@
+name: Notify PR Events to Discord
+
+on:
+  workflow_call:
+    inputs:
+      deployment_status:
+        required: false
+        type: string
+        default: ""
+      tests_passed:
+        required: false
+        type: string
+        default: ""
+    secrets:
+      discord_webhook:
+        required: true
+
+jobs:
+  notify:
+    name: Send Discord Notification
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get Human Commit Count
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
+        id: commits
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          count=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "${{ github.event.pull_request.commits_url }}" \
+            | jq '[.[] | select(.author != null and .author.type == "User")] | length')
+          echo "count=$count" >> $GITHUB_OUTPUT
+
+      - name: Set Metadata
+        id: meta
+        run: |
+          ACTION="${{ github.event.action }}"
+          MERGED="${{ github.event.pull_request.merged }}"
+          if [[ "$ACTION" == "opened" ]]; then
+            echo "color=3066993" >> $GITHUB_OUTPUT
+            echo "role=1195734967294914591" >> $GITHUB_OUTPUT
+            echo "status=🟢 Opened" >> $GITHUB_OUTPUT
+          elif [[ "$ACTION" == "closed" && "$MERGED" == "true" ]]; then
+            echo "color=10181046" >> $GITHUB_OUTPUT
+            echo "role=1195734967294914592" >> $GITHUB_OUTPUT
+            echo "status=🟣 Merged" >> $GITHUB_OUTPUT
+          else
+            echo "color=15158332" >> $GITHUB_OUTPUT
+            echo "role=1195734967294914590" >> $GITHUB_OUTPUT
+            echo "status=🔴 Closed (Not Merged)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Discord Webhook
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.discord_webhook }}
+        run: |
+          COLOR=${{ steps.meta.outputs.color }}
+          ROLE_ID=${{ steps.meta.outputs.role }}
+          STATUS="${{ steps.meta.outputs.status }}"
+          PR_NUM="${{ github.event.pull_request.number }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+          SOURCE_BRANCH="${{ github.event.pull_request.head.ref }}"
+          TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          COMMIT_COUNT="${{ steps.commits.outputs.count }}"
+          DEPLOYMENT_STATUS="${{ inputs.deployment_status }}"
+          TEST_PASS="${{ inputs.tests_passed }}"
+
+          EMBED=$(jq -n \
+            --arg title "📣 Pull Request #$PR_NUM – $PR_TITLE – $STATUS" \
+            --arg author "$AUTHOR" \
+            --arg branch "$SOURCE_BRANCH → $TARGET_BRANCH" \
+            --arg url "$PR_URL" \
+            --arg color "$COLOR" \
+            --arg commits "$COMMIT_COUNT" \
+            --arg deploy "$DEPLOYMENT_STATUS" \
+            --arg tests "$TEST_PASS" \
+            --argjson c "$COLOR" \
+            '
+            {
+              "title": $title,
+              "color": $c,
+              "fields": [
+                { "name": "👤 Author", "value": $author, "inline": true },
+                { "name": "🔀 Branch", "value": $branch, "inline": true },
+                { "name": "🔗 View PR", "value": $url }
+              ]
+            }
+            + ( $commits != "" 
+              | if . then
+                  {
+                    "fields": [
+                      { "name": "🧮 Commits", "value": $commits, "inline": true },
+                      { "name": "🧪 Tests", "value": $tests, "inline": true },
+                      { "name": "🚀 Deployment", "value": $deploy }
+                    ]
+                  }
+                else {} end
+              )
+            ')
+
+          curl -X POST "$DISCORD_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+              --arg content "<@&$ROLE_ID>" \
+              --argjson embed "$EMBED" \
+              '{
+                "content": $content,
+                "embeds": [$embed],
+                "allowed_mentions": { "parse": ["roles"] },
+                "username": "GitHub PR Bot",
+                "avatar_url": "https://octodex.github.com/images/mona-the-rivetertocat.png"
+              }')"
