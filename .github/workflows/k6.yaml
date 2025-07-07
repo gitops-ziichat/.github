@@ -9,7 +9,7 @@ on:
       params:
         required: false
         type: string
-        default: "--vus 10 --duration 30s --out json=results.json"
+        default: "--vus 10 --duration 30s"
       browser:
         required: false
         type: boolean
@@ -19,46 +19,47 @@ on:
         type: string
 
 jobs:
-  k6_test:
-    name: K6 Performance Test
+  protocol:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Install Node.js and dependencies
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install dependencies and start app
+      - name: Install dependencies
         run: |
-          npm ci
-          npm start &
-          sleep 10
+          npm install
+
+      - name: Setup K6
+        uses: grafana/setup-k6-action@v1
+        with:
+          browser: ${{ inputs.browser }}
 
       - name: Run K6 tests
-        uses: grafana/k6-github-action@main
+        uses: grafana/run-k6-action@v1
         with:
-          filename: ${{ inputs.include }}
+          path: ${{ inputs.include }}
           flags: ${{ inputs.params }}
-          browser: ${{ inputs.browser }}
+          parallel: true
+          fail-fast: false
         env:
           BASE_URL: ${{ inputs.base_url }}
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      - name: Show K6 results in log
-        if: success()
+      - name: Show test result if exists
         run: |
-          echo "🧪 K6 test result:"
-          cat results.json | jq
+          if [ -f results.json ]; then
+            echo "🧪 K6 test result:"
+            cat results.json | jq
+          else
+            echo "❗️ No results.json file found."
+          fi
 
-      - name: Upload K6 test results
-        if: success()
+      - name: Upload test results (optional)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: k6-results
           path: results.json
+          if-no-files-found: ignore
