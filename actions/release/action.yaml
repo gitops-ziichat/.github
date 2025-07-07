@@ -15,25 +15,25 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Login to GHCR
-      if: ${{ inputs.image != '' }}
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ github.token }}
+    # - name: Login to GHCR
+    #   if: ${{ inputs.image != '' }}
+    #   uses: docker/login-action@v3
+    #   with:
+    #     registry: ghcr.io
+    #     username: ${{ github.actor }}
+    #     password: ${{ github.token }}
 
-    - name: Tag and Push Docker Image
-      if: ${{ inputs.image != '' }}
-      shell: bash
-      env:
-        IMAGE: ${{ inputs.image }}
-        SHA: ${{ inputs.sha }}
-        VERSION: ${{ inputs.version }}
-      run: |
-        echo "🐳 Tagging Docker image $IMAGE:$VERSION"
-        docker tag "$IMAGE:$SHA" "$IMAGE:$VERSION"
-        docker push "$IMAGE:$VERSION"
+    # - name: Tag and Push Docker Image
+    #   if: ${{ inputs.image != '' }}
+    #   shell: bash
+    #   env:
+    #     IMAGE: ${{ inputs.image }}
+    #     SHA: ${{ inputs.sha }}
+    #     VERSION: ${{ inputs.version }}
+    #   run: |
+    #     echo "🐳 Tagging Docker image $IMAGE:$VERSION"
+    #     docker tag "$IMAGE:$SHA" "$IMAGE:$VERSION"
+    #     docker push "$IMAGE:$VERSION"
 
     - name: Create GitHub Release
       shell: bash
