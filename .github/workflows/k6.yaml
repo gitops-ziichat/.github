@@ -24,32 +24,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Start test application
+      - name: Install Node.js and dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies and start app
         run: |
-          npm install
+          npm ci
           npm start &
-          sleep 5
+          sleep 10
 
-      - name: Run K6 browser tests
+      - name: Run K6 tests
         uses: grafana/k6-github-action@main
         with:
-          include: ${{ inputs.include }}
-          params: ${{ inputs.params }}
+          filename: ${{ inputs.include }}
+          flags: ${{ inputs.params }}
           browser: ${{ inputs.browser }}
         env:
           BASE_URL: ${{ inputs.base_url }}
-      
+
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
-      - name: Show K6 result in log
+
+      - name: Show K6 results in log
+        if: success()
         run: |
           echo "🧪 K6 test result:"
           cat results.json | jq
 
-      - name: Upload test results
+      - name: Upload K6 test results
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: k6-results
