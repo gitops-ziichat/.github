@@ -15,6 +15,25 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Login to GHCR
+      if: ${{ inputs.image != '' }}
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
+    - name: Tag and Push Docker Image
+      if: ${{ inputs.image != '' }}
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        VERSION: ${{ inputs.version }}
+      run: |
+        echo "🐳 Tagging Docker image $IMAGE:$VERSION"
+        docker tag "$IMAGE:latest" "$IMAGE:$VERSION"
+        docker push "$IMAGE:$VERSION"
+
     - name: Create GitHub Release
       shell: bash
       env:
@@ -32,27 +51,4 @@ runs:
             --target "$SHA"
         fi
 
-    - name: Login to GHCR
-      if: ${{ inputs.image != '' }}
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ github.token }}
-
-    - name: Tag and Push Docker Image
-      if: ${{ inputs.image != '' }}
-      shell: bash
-      env:
-        IMAGE: ${{ inputs.image }}
-        VERSION: ${{ inputs.version }}
-      run: |
-        echo "🐳 Tagging Docker image $IMAGE:$VERSION"
-
-        docker pull "$IMAGE:latest" || {
-          echo "❌ Failed to pull latest image. Aborting tag step.";
-          exit 1;
-        }
-
-        docker tag "$IMAGE:latest" "$IMAGE:$VERSION"
-        docker push "$IMAGE:$VERSION"
+    
