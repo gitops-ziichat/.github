@@ -23,10 +23,14 @@ runs:
       shell: bash
       run: |
         echo "Creating release v${VERSION}..."
-        gh release create "v${VERSION}" \
-          --title "Version ${VERSION}" \
-          --notes "Released via GitHub Actions" \
-          --target "$SHA"
+        if gh release view "v${VERSION}" > /dev/null 2>&1; then
+          echo "Release v${VERSION} already exists. Skipping creation."
+        else
+          gh release create "v${VERSION}" \
+            --title "Version ${VERSION}" \
+            --notes "Released via GitHub Actions" \
+            --target "$SHA"
+        fi
 
     - name: Docker login (if image provided)
       if: ${{ inputs.image != '' }}
