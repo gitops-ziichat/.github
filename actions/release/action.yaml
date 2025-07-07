@@ -1,5 +1,5 @@
 name: Release
-description: Tags and releases a GitHub repository
+description: Tags Docker image and creates a GitHub release
 
 inputs:
   sha:
@@ -8,11 +8,14 @@ inputs:
   version:
     description: The version to release
     required: true
+  image:
+    description: The image name without tag (e.g. ghcr.io/org/repo)
+    required: false
 
 runs:
   using: composite
   steps:
-    - name: Create release
+    - name: Create GitHub Release
       env:
         GH_TOKEN: ${{ github.token }}
         SHA: ${{ inputs.sha }}
@@ -23,4 +26,21 @@ runs:
         gh release create "v${VERSION}" \
           --title "Version ${VERSION}" \
           --notes "Released via GitHub Actions" \
-          --target $SHA
+          --target "$SHA"
+
+    - name: Docker login (if image provided)
+      if: ${{ inputs.image != '' }}
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
+    - name: Tag & Push Docker Image
+      if: ${{ inputs.image != '' }}
+      shell: bash
+      run: |
+        echo "Tagging and pushing Docker image ${{ inputs.image }}:${{ inputs.version }}"
+        docker pull "${{ inputs.image }}:latest"
+        docker tag "${{ inputs.image }}:latest" "${{ inputs.image }}:${{ inputs.version }}"
+        docker push "${{ inputs.image }}:${{ inputs.version }}"

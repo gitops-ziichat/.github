@@ -32,3 +32,5 @@ jobs:
         with:
           sha: ${{ github.sha }}
           version: ${{ steps.version.outputs.current || steps.tag.outputs.next }}
+          image: ghcr.io/${{ github.repository }}
+
