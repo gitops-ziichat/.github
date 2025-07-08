@@ -22,8 +22,8 @@ runs:
       with:
         images: ${{ inputs.registry }}/${{ inputs.image_name }}
         tags: |
-          type=raw,value=latest,enable={{is_default_branch}}
-          type=semver,pattern={{version}},enable={{is_default_branch}}
+          type=raw,value=latest,enable=${{ github.ref_name == 'develop' }}
+          type=semver,pattern={{version}},enable=${{ github.ref_name == 'main' }}
           type=sha,priority=1000,prefix=,suffix=,format=long
           type=ref,event=pr,enable=${{ github.event_name == 'pull_request' }}
 
