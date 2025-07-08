@@ -15,26 +15,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up Git
-      shell: bash
+    - name: Retag Docker Digest with Version
       run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git fetch --tags --force
-
-    - name: Check and Create Git Tag Release
-      shell: bash
-      env:
-        VERSION: ${{ inputs.version }}
-        SHA: ${{ inputs.sha }}
-      run: |
-        if git rev-parse "v$VERSION" >/dev/null 2>&1; then
-          echo "✅ Git tag v$VERSION already exists. Skipping tagging."
-        else
-          echo "🏷️ Creating Git tag v$VERSION..."
-          git tag -a "v$VERSION" "$SHA" -m "Release v$VERSION"
-          git push origin "v$VERSION"
-        fi
+          docker buildx imagetools create \
+            --tag ${{ inputs.image }}:${{ inputs.version }} \
+            --tag ${{ inputs.image }}:prod \
+            ${{ inputs.image }}@${{ needs.build.outputs.digest }}
     
     - name: Create GitHub Release
       shell: bash
