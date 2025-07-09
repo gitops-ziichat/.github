@@ -15,6 +15,7 @@ on:
         required: false
         default: ${{ github.repository }}
       context:
+        type: string
         description: Build context directory
         required: false
         default: .dh-build
@@ -22,7 +23,7 @@ on:
         type: string
         description: The version to tag the image with (e.g. 1.2.3)
         required: true
-        
+
 permissions:
   contents: read
   packages: write
