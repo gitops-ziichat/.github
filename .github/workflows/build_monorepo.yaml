@@ -36,6 +36,14 @@ jobs:
         with:
           submodules: 'true'
 
+      - name: Detect Version
+        uses: gitops-ziichat/.github/actions/detect_version@main
+        id: version
+
+      - name: Determine Tag
+        if: steps.version.outputs.current == ''
+        uses: gitops-ziichat/.github/actions/determine_tag@main
+        id: tag
         
       - name: Build Docker Image
         uses: gitops-ziichat/.github/actions/build_monorepo@main
@@ -43,3 +51,5 @@ jobs:
           registry: ${{ inputs.registry }}
           image_name: ${{ inputs.image_name }}
           context: ${{ inputs.context }}
+          sha: ${{ github.sha }}
+

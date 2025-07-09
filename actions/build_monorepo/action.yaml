@@ -6,29 +6,47 @@ inputs:
     description: The Docker registry to push the image to
     required: false
     default: ghcr.io
+
   image_name:
     description: The name of the Docker image
     required: false
     default: ${{ github.repository }}
+
   context:
     description: Build context directory
     required: false
     default: .dh-build
+
+  version:
+    description: The semantic version to be used for tagging
+    required: true
+
 runs:
   using: composite
   steps:
     - name: Extract metadata for the Docker image
       id: meta
       uses: docker/metadata-action@v5
-      env:
-        DOCKER_METADATA_PR_HEAD_SHA: ${{ github.event_name == 'pull_request' }}
       with:
         images: ${{ inputs.registry }}/${{ inputs.image_name }}
         tags: |
-          type=raw,value=latest,enable=${{ github.ref_name == 'develop' }}
+          # Semver for main (release)
           type=semver,pattern={{version}},enable=${{ github.ref_name == 'main' }}
+
+          # Beta for develop
+          type=raw,value=${{ inputs.version }}-beta,enable=${{ github.ref_name == 'develop' }}
+
+          # Alpha for feature branches
+          type=raw,value=${{ inputs.version }}-alpha,enable=${{ !contains(fromJson('["main","develop"]'), github.ref_name) }}
+
+          # Always push sha tag
           type=sha,priority=1000,prefix=,suffix=,format=long
+
+          # Pull request tag
           type=ref,event=pr,enable=${{ github.event_name == 'pull_request' }}
+
+          # Optional: latest tag only on main
+          type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
 
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -54,5 +72,3 @@ runs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-
-
