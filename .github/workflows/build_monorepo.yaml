@@ -15,6 +15,7 @@ on:
         required: false
         default: ${{ github.repository }}
       dockerfile:
+        type: string
         description: Path to Dockerfile
         required: false
         default: Dockerfile
