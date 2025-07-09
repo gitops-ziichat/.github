@@ -19,6 +19,11 @@ on:
         description: Path to Dockerfile
         required: true
         default: Dockerfile
+      context:
+        type: string
+        description: Build context directory
+        required: false
+        default: .dh-build
       version:
         type: string
         description: The version to tag the image with (e.g. 1.2.3)
@@ -48,5 +53,6 @@ jobs:
           registry: ${{ inputs.registry }}
           image_name: ${{ inputs.image_name }}
           dockerfile: ${{ inputs.dockerfile }}
+          context: ${{ inputs.context }}
           version: ${{ inputs.version }}
 

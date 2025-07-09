@@ -17,6 +17,11 @@ inputs:
     required: false
     default: Dockerfile
 
+  context:
+    description: Build context directory
+    required: false
+    default: .dh-build
+
   version:
     description: The semantic version to be used for tagging
     required: true
@@ -67,7 +72,7 @@ runs:
       with:
         push: true
         file: ${{ inputs.dockerfile }}
-        context: .
+        context: ${{ inputs.context }}
         platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
