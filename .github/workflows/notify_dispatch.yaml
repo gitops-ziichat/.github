@@ -22,11 +22,11 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Send Discord Notification
-        uses: gitops-ziichat/.github/actions/notify-discord@main
+        uses: gitops-ziichat/.github/actions/notify_discord@main
         with:
           discord_webhook: ${{ secrets.discord_webhook }}
-          deployment_status: "${{ steps.failed.outputs.FAILED_JOBS }}"
-          tests_passed: "❌"
+          deployment_status: ${{ inputs.deployment_status }}
+          tests_passed: ${{ inputs.tests_passed }}
 
       - name: Auto-Close PR
         env:
